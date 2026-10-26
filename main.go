@@ -1,14 +1,10 @@
 package main
 
 import (
-	"context"
-	"errors"
 	"log/slog"
 	"net/http"
 	"os"
-	"os/signal"
 	"path/filepath"
-	"syscall"
 	"time"
 )
 
@@ -39,32 +35,15 @@ func main() {
 	}
 
 	httpSrv := &http.Server{
-		Addr:              env("ADDR", ":8080"),
-		Handler:           srv.Routes(),
+		Addr:    env("ADDR", ":8080"),
+		Handler: srv.Routes(),
+		// The one timeout worth keeping: a socket that never finishes its headers
+		// is the cheapest way to starve this server.
 		ReadHeaderTimeout: 5 * time.Second,
-		ReadTimeout:       15 * time.Second,
-		WriteTimeout:      30 * time.Second,
-		IdleTimeout:       60 * time.Second,
 	}
 
-	go func() {
-		log.Info("listening", "addr", httpSrv.Addr, "db", dbPath)
-		if err := httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Error("serve", "err", err)
-			os.Exit(1)
-		}
-	}()
-
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-	<-stop
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := httpSrv.Shutdown(ctx); err != nil {
-		log.Error("shutdown", "err", err)
-	}
-	log.Info("stopped")
+	log.Info("listening", "addr", httpSrv.Addr, "db", dbPath)
+	log.Error("serve", "err", httpSrv.ListenAndServe())
 }
 
 func env(k, def string) string {
