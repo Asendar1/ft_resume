@@ -51,7 +51,7 @@ func (l *LLM) Advice(ctx context.Context, a Application) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	raw, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	raw, err := io.ReadAll(io.LimitReader(resp.Body, 1 * 1024 * 1024))
 	if err != nil {
 		return "", err
 	}

@@ -69,7 +69,7 @@ func (in *createInput) normalize() map[string]string {
 
 func (s *Server) create(w http.ResponseWriter, r *http.Request) {
 	var in createInput
-	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 64<<10)).Decode(&in); err != nil {
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 64 * 1024)).Decode(&in); err != nil {
 		writeErr(w, http.StatusBadRequest, "invalid json body")
 		return
 	}
@@ -128,7 +128,7 @@ func (s *Server) updateStatus(w http.ResponseWriter, r *http.Request) {
 	var in struct {
 		Status Status `json:"status"`
 	}
-	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4<<10)).Decode(&in); err != nil {
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4 * 1024)).Decode(&in); err != nil {
 		writeErr(w, http.StatusBadRequest, "invalid json body")
 		return
 	}
